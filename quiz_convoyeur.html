@@ -1,0 +1,869 @@
+```html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz HSE - Sécurité des Convoyeurs à Bande</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .safety-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .start-screen, .quiz-screen, .results-screen {
+            display: none;
+        }
+
+        .start-screen.active, .quiz-screen.active, .results-screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .intro-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .warning-box h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warning-box ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .warning-box li {
+            margin: 8px 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .question-container {
+            margin-bottom: 30px;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .question-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 0 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            padding: 18px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option:hover {
+            background: #e8e9f3;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 1.05em;
+            color: #2c3e50;
+        }
+
+        .option.correct {
+            background: #d4edda;
+            border-color: #28a745;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .option.incorrect {
+            background: #f8d7da;
+            border-color: #dc3545;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            color: #155724;
+        }
+
+        .feedback.incorrect {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            color: #721c24;
+        }
+
+        .feedback-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.6);
+        }
+
+        .results-screen {
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin: 30px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .score-circle.excellent {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .score-circle.good {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .score-circle.needs-improvement {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .score-label {
+            font-size: 0.3em;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+
+        .results-message {
+            font-size: 1.3em;
+            margin: 30px 0;
+            color: #2c3e50;
+            line-height: 1.8;
+        }
+
+        .results-details {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            text-align: left;
+        }
+
+        .results-details h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 1.05em;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .certificate-box {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border: 3px dashed #f5576c;
+        }
+
+        .certificate-box h3 {
+            color: #d63031;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+
+            .content {
+                padding: 25px;
+            }
+
+            .question-text {
+                font-size: 1.1em;
+            }
+
+            .score-circle {
+                width: 150px;
+                height: 150px;
+                font-size: 2.5em;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Quiz HSE - Sécurité des Convoyeurs à Bande</h1>
+            <p>Formation sur les Organes de Sécurité des Belt Conveyors</p>
+            <div class="safety-badge">⚠️ SÉCURITÉ PRIORITAIRE ⚠️</div>
+        </div>
+
+        <div class="content">
+            <!-- Start Screen -->
+            <div class="start-screen active">
+                <p class="intro-text">
+                    Bienvenue à cette formation HSE essentielle sur la sécurité des convoyeurs à bande. 
+                    En tant qu'ingénieur HSE, je vous rappelle que la connaissance des organes de sécurité 
+                    est cruciale pour prévenir les accidents et garantir un environnement de travail sûr.
+                </p>
+
+                <div class="warning-box">
+                    <h3>⚠️ Points Clés de Sécurité</h3>
+                    <ul>
+                        <li>Les convoyeurs à bande présentent des risques majeurs : happement, écrasement, cisaillement</li>
+                        <li>Chaque organe de sécurité a un rôle vital dans la protection des opérateurs</li>
+                        <li>La connaissance et la vérification régulière de ces dispositifs sont obligatoires</li>
+                        <li>Un convoyeur sans protections conformes doit être consigné</li>
+                    </ul>
+                </div>
+
+                <p class="intro-text">
+                    Ce quiz évalue vos connaissances sur les 9 organes de sécurité essentiels des convoyeurs à bande.
+                    <strong>Score minimum requis : 70%</strong>
+                </p>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn" onclick="startQuiz()">Commencer le Quiz 🚀</button>
+                </div>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div class="quiz-screen">
+                <div class="question-container">
+                    <div class="question-header">
+                        <span class="question-number">Question <span id="currentQuestion">1</span>/15</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressBar"></div>
+                        </div>
+                    </div>
+
+                    <div class="question-text" id="questionText"></div>
+
+                    <div class="options" id="optionsContainer"></div>
+
+                    <div class="feedback" id="feedback">
+                        <div class="feedback-title" id="feedbackTitle"></div>
+                        <div id="feedbackText"></div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" onclick="previousQuestion()" id="prevBtn">⬅️ Précédent</button>
+                    <button class="btn" onclick="nextQuestion()" id="nextBtn" style="display: none;">Suivant ➡️</button>
+                    <button class="btn" onclick="showResults()" id="finishBtn" style="display: none;">Terminer 🏁</button>
+                </div>
+            </div>
+
+            <!-- Results Screen -->
+            <div class="results-screen">
+                <h2 style="color: #667eea; margin-bottom: 20px;">Résultats du Quiz HSE</h2>
+                
+                <div class="score-circle" id="scoreCircle">
+                    <div>
+                        <span id="scorePercentage">0</span>%
+                        <div class="score-label">Score</div>
+                    </div>
+                </div>
+
+                <div class="results-message" id="resultsMessage"></div>
+
+                <div class="results-details">
+                    <h3>📊 Détails de Performance</h3>
+                    <div class="detail-item">
+                        <span>Questions Correctes :</span>
+                        <strong id="correctAnswers">0</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Questions Incorrectes :</span>
+                        <strong id="incorrectAnswers">0</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Total Questions :</span>
+                        <strong id="totalQuestions">15</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Niveau requis :</span>
+                        <strong>70%</strong>
+                    </div>
+                </div>
+
+                <div class="certificate-box" id="certificateBox" style="display: none;">
+                    <h3>✅ Formation Validée</h3>
+                    <p>Félicitations ! Vous avez démontré une connaissance satisfaisante des organes de sécurité des convoyeurs à bande. 
+                       N'oubliez pas : la sécurité est l'affaire de tous, tous les jours.</p>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn" onclick="restartQuiz()">🔄 Recommencer le Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Quel est le rôle principal de l'arrêt d'urgence à câble sur un convoyeur à bande ?",
+                options: [
+                    "Permettre l'arrêt du convoyeur en cas d'urgence depuis n'importe quel point le long du convoyeur",
+                    "Servir de support pour les câbles électriques",
+                    "Mesurer la tension de la bande",
+                    "Alerter uniquement l'opérateur sans arrêter le convoyeur"
+                ],
+                correct: 0,
+                explanation: "L'arrêt d'urgence à câble (tire-câble) permet à toute personne le long du convoyeur d'arrêter immédiatement l'installation en cas de danger, simplement en tirant sur le câble. C'est un dispositif de sécurité critique accessible en tout point."
+            },
+            {
+                question: "Que doit faire un opérateur avant d'intervenir sur un convoyeur ?",
+                options: [
+                    "Accélérer le travail pour terminer rapidement",
+                    "Consigner le convoyeur et vérifier tous les organes de sécurité",
+                    "Demander à un collègue de surveiller",
+                    "Travailler uniquement quand la bande est au ralenti"
+                ],
+                correct: 1,
+                explanation: "Avant toute intervention, le convoyeur doit être consigné selon les procédures LOTO (Lock-Out Tag-Out). Tous les organes de sécurité doivent être vérifiés et l'équipement doit être isolé de toutes sources d'énergie."
+            },
+            {
+                question: "Pourquoi le klaxon et le gyrophare sont-ils essentiels sur un convoyeur ?",
+                options: [
+                    "Pour décorer l'installation",
+                    "Pour avertir le personnel du démarrage imminent du convoyeur",
+                    "Pour remplacer l'arrêt d'urgence",
+                    "Uniquement pour la conformité réglementaire"
+                ],
+                correct: 1,
+                explanation: "Le klaxon (alarme sonore) et le gyrophare (alarme visuelle) alertent tout le personnel présent qu'un démarrage du convoyeur est imminent, permettant à chacun de se mettre en sécurité. C'est obligatoire pour prévenir les accidents."
+            },
+            {
+                question: "Quel risque majeur les caches de protection des accouplements et bouts d'arbre préviennent-ils ?",
+                options: [
+                    "La corrosion des pièces métalliques",
+                    "Le happement et l'enroulement des vêtements ou membres",
+                    "Les variations de température",
+                    "L'accumulation de poussière"
+                ],
+                correct: 1,
+                explanation: "Les accouplements et bouts d'arbre en rotation présentent un risque critique de happement. Les parties tournantes peuvent attraper les vêtements, cheveux ou membres, causant des blessures graves voire mortelles. Les caches sont donc obligatoires."
+            },
+            {
+                question: "Les caches de protection des tambours doivent être installés pour :",
+                options: [
+                    "Améliorer l'esthétique du convoyeur",
+                    "Empêcher l'accès aux points de pincement entre la bande et le tambour",
+                    "Faciliter le nettoyage",
+                    "Réduire le bruit"
+                ],
+                correct: 1,
+                explanation: "Les tambours (motrices et renvoi) créent des points de pincement dangereux où la bande s'enroule. Ces zones peuvent happer et écraser. Les caches de protection empêchent tout accès à ces zones mortelles."
+            },
+            {
+                question: "Quelle est la fonction principale des rouleaux de parcours sur un convoyeur ?",
+                options: [
+                    "Supporter et guider la bande transporteuse en réduisant la friction",
+                    "Arrêter automatiquement le convoyeur",
+                    "Mesurer la vitesse de la bande",
+                    "Refroidir le système"
+                ],
+                correct: 0,
+                explanation: "Les rouleaux de parcours (rouleaux porteurs et de retour) supportent la bande et réduisent la friction. Ils doivent être protégés pour éviter le happement aux points de contact avec la bande et prévenir les accidents."
+            },
+            {
+                question: "Pourquoi le système de tension du convoyeur doit-il être protégé ?",
+                options: [
+                    "Pour cacher les mécanismes",
+                    "Car il contient des éléments en mouvement et sous tension mécanique présentant des risques de happement et de rupture",
+                    "Pour éviter les ajustements non autorisés uniquement",
+                    "C'est une recommandation optionnelle"
+                ],
+                correct: 1,
+                explanation: "Le système de tension (contrepoids, vis ou système hydraulique) maintient la bande sous tension. Il présente des risques de happement, d'écrasement et de projection en cas de rupture. Sa protection est obligatoire et vitale."
+            },
+            {
+                question: "Les protections latérales et le capotage du convoyeur servent à :",
+                options: [
+                    "Décorer l'installation",
+                    "Empêcher les chutes de matériaux et le contact avec la bande en mouvement",
+                    "Réduire les coûts de maintenance",
+                    "Faciliter le chargement"
+                ],
+                correct: 1,
+                explanation: "Les protections latérales et le capotage empêchent : 1) le contact accidentel avec la bande en mouvement, 2) les chutes de matériaux, 3) les projections, et 4) protègent le personnel travaillant à proximité. Ils sont essentiels pour la sécurité."
+            },
+            {
+                question: "À quelle fréquence minimum les organes de sécurité d'un convoyeur doivent-ils être vérifiés ?",
+                options: [
+                    "Une fois par an",
+                    "Quotidiennement avant chaque démarrage",
+                    "Seulement en cas de panne",
+                    "Une fois par mois"
+                ],
+                correct: 1,
+                explanation: "Les organes de sécurité doivent être vérifiés quotidiennement avant chaque démarrage (vérification pré-opérationnelle), complétés par des inspections périodiques détaillées. Un équipement défectueux doit être immédiatement consigné."
+            },
+            {
+                question: "Que signifie un déport de bande sur un convoyeur ?",
+                options: [
+                    "Un dépôt de matériaux sur la bande",
+                    "Un décalage latéral anormal de la bande pouvant causer des frottements et accidents",
+                    "Une augmentation de la vitesse",
+                    "Un arrêt programmé"
+                ],
+                correct: 1,
+                explanation: "Le déport de bande est un déplacement latéral anormal qui peut causer : frottements, détérioration de la bande, chute de matériaux, et accidents graves. Des systèmes de détection et d'arrêt automatique doivent être installés."
+            },
+            {
+                question: "La protection sous convoyeur au niveau des passages est nécessaire pour :",
+                options: [
+                    "Collecter les déchets",
+                    "Empêcher tout contact avec les parties mobiles sous la bande et protéger contre les chutes d'objets",
+                    "Améliorer l'éclairage",
+                    "Faciliter le nettoyage"
+                ],
+                correct: 1,
+                explanation: "Les passages sous convoyeur doivent être protégés contre : 1) le contact avec les rouleaux de retour, 2) les chutes de matériaux, 3) les projections. Une hauteur minimale de sécurité doit être respectée avec protections adéquates."
+            },
+            {
+                question: "Quelle action est INTERDITE à proximité d'un convoyeur en fonctionnement ?",
+                options: [
+                    "Porter des EPI appropriés",
+                    "Nettoyer ou ajuster des éléments pendant que le convoyeur fonctionne",
+                    "Observer depuis une zone sécurisée",
+                    "Utiliser l'arrêt d'urgence en cas de danger"
+                ],
+                correct: 1,
+                explanation: "Il est strictement INTERDIT de nettoyer, ajuster, réparer ou toucher toute partie mobile d'un convoyeur en fonctionnement. Toute intervention nécessite l'arrêt et la consignation complète du système. Règle absolue de sécurité."
+            },
+            {
+                question: "En cas de défaillance d'un organe de sécurité, que doit faire l'opérateur ?",
+                options: [
+                    "Continuer à utiliser le convoyeur prudemment",
+                    "Arrêter immédiatement le convoyeur, le consigner et signaler l'anomalie",
+                    "Réparer lui-même le problème",
+                    "Attendre la fin du poste pour signaler"
+                ],
+                correct: 1,
+                explanation: "Toute défaillance d'un organe de sécurité impose : 1) arrêt immédiat, 2) consignation du convoyeur, 3) signalement à la hiérarchie, 4) interdiction d'utilisation jusqu'à réparation. Aucun compromis n'est acceptable en matière de sécurité."
+            },
+            {
+                question: "Les boutons d'arrêt d'urgence doivent être positionnés :",
+                options: [
+                    "Uniquement au poste de commande principal",
+                    "À intervalles réguliers le long du convoyeur, facilement accessibles",
+                    "Dans le bureau du superviseur",
+                    "Un seul suffit à l'entrée"
+                ],
+                correct: 1,
+                explanation: "Les boutons d'arrêt d'urgence doivent être : 1) facilement accessibles, 2) clairement identifiés (rouge/jaune), 3) positionnés à intervalles réguliers (généralement tous les 30-50m), 4) aux postes de travail et accès. Norme ISO 13850."
+            },
+            {
+                question: "Quel EPI minimum est obligatoire lors d'interventions autour des convoyeurs ?",
+                options: [
+                    "Uniquement des gants",
+                    "Casque, chaussures de sécurité, vêtements ajustés sans parties flottantes, et selon les risques : gants, lunettes, protections auditives",
+                    "Aucun EPI n'est nécessaire si on est prudent",
+                    "Seulement des chaussures de sécurité"
+                ],
+                correct: 1,
+                explanation: "EPI obligatoires : casque, chaussures de sécurité, vêtements AJUSTÉS sans cordons/manches flottantes. Selon l'analyse de risques : gants anti-coupure, lunettes, protections auditives. Les cheveux longs doivent être attachés et protégés. Bijoux interdits."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let score = 0;
+
+        function startQuiz() {
+            document.querySelector('.start-screen').classList.remove('active');
+            document.querySelector('.quiz-screen').classList.add('active');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+            document.getElementById('questionText').textContent = question.question;
+            
+            const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progressPercentage + '%';
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.innerHTML = `
+                    <input type="radio" name="answer" id="option${index}" value="${index}">
+                    <label for="option${index}">${option}</label>
+                `;
+                optionDiv.onclick = () => selectOption(index);
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            document.getElementById('feedback').classList.remove('show', 'correct', 'incorrect');
+            document.getElementById('prevBtn').style.display = currentQuestionIndex > 0 ? 'block' : 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('finishBtn').style.display = 'none';
+        }
+
+        function selectOption(index) {
+            const radios = document.querySelectorAll('input[name="answer"]');
+            radios.forEach((radio, i) => {
+                radio.checked = i === index;
+            });
+            
+            checkAnswer(index);
+        }
+
+        function checkAnswer(selectedIndex) {
+            const question = questions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackText = document.getElementById('feedbackText');
+            
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+            
+            if (selectedIndex === question.correct) {
+                options[selectedIndex].classList.add('correct');
+                feedback.classList.add('show', 'correct');
+                feedbackTitle.textContent = '✅ Correct !';
+                feedbackText.textContent = question.explanation;
+                userAnswers[currentQuestionIndex] = true;
+            } else {
+                options[selectedIndex].classList.add('incorrect');
+                options[question.correct].classList.add('correct');
+                feedback.classList.add('show', 'incorrect');
+                feedbackTitle.textContent = '❌ Incorrect';
+                feedbackText.innerHTML = `<strong>Bonne réponse :</strong> ${question.options[question.correct]}<br><br>${question.explanation}`;
+                userAnswers[currentQuestionIndex] = false;
+            }
+            
+            if (currentQuestionIndex < questions.length - 1) {
+                document.getElementById('nextBtn').style.display = 'block';
+            } else {
+                document.getElementById('finishBtn').style.display = 'block';
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+                
+                if (userAnswers[currentQuestionIndex] !== undefined) {
+                    const question = questions[currentQuestionIndex];
+                    const wasCorrect = userAnswers[currentQuestionIndex];
+                    const options = document.querySelectorAll('.option');
+                    
+                    options.forEach((option, index) => {
+                        option.style.pointerEvents = 'none';
+                        const radio = option.querySelector('input[type="radio"]');
+                        
+                        if (wasCorrect && index === question.correct) {
+                            radio.checked = true;
+                            option.classList.add('correct');
+                        } else if (!wasCorrect) {
+                            if (index === question.correct) {
+                                option.classList.add('correct');
+                            }
+                        }
+                    });
+                    
+                    const feedback = document.getElementById('feedback');
+                    feedback.classList.add('show');
+                    
+                    if (currentQuestionIndex < questions.length - 1) {
+                        document.getElementById('nextBtn').style.display = 'block';
+                    } else {
+                        document.getElementById('finishBtn').style.display = 'block';
+                    }
+                }
+            }
+        }
+
+        function showResults() {
+            score = userAnswers.filter(answer => answer === true).length;
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            document.querySelector('.quiz-screen').classList.remove('active');
+            document.querySelector('.results-screen').classList.add('active');
+            
+            document.getElementById('scorePercentage').textContent = percentage;
+            document.getElementById('correctAnswers').textContent = score;
+            document.getElementById('incorrectAnswers').textContent = questions.length - score;
+            
+            const scoreCircle = document.getElementById('scoreCircle');
+            const resultsMessage = document.getElementById('resultsMessage');
+            const certificateBox = document.getElementById('certificateBox');
+            
+            if (percentage >= 90) {
+                scoreCircle.className = 'score-circle excellent';
+                resultsMessage.innerHTML = `<strong>🏆 Excellence !</strong><br>Vous maîtrisez parfaitement les organes de sécurité des convoyeurs à bande. Votre niveau de connaissance garantit un environnement de travail sûr. Continuez à être un modèle de sécurité !`;
+                certificateBox.style.display = 'block';
+            } else if (percentage >= 70) {
+                scoreCircle.className = 'score-circle good';
+                resultsMessage.innerHTML = `<strong>✅ Formation Validée</strong><br>Vous avez démontré une connaissance satisfaisante des dispositifs de sécurité. Revoyez les questions manquées et continuez à prioriser la sécurité dans toutes vos activités.`;
+                certificateBox.style.display = 'block';
+            } else {
+                scoreCircle.className = 'score-circle needs-improvement';
+                resultsMessage.innerHTML = `<strong>⚠️ Formation Non Validée</strong><br>Votre score est inférieur au minimum requis de 70%. Une formation complémentaire est nécessaire avant toute intervention sur les convoyeurs. La sécurité n'admet aucun compromis. Revoyez attentivement tous les points et repassez le quiz.`;
+                certificateBox.style.display = 'none';
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            score = 0;
+            
+            document.querySelector('.results-screen').classList.remove('active');
+            document.querySelector('.start-screen').classList.add('active');
+        }
+    </script>
+</body>
+</html>
+```
